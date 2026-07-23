@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>宴会 席決めルーレット</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; height: 100%; }
+  body {
+    font-family: -apple-system, "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: linear-gradient(160deg, #b3202e 0%, #7a1420 100%);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  header {
+    text-align: center;
+    padding: 18px 12px 8px;
+  }
+  header h1 {
+    margin: 0;
+    font-size: 20px;
+    letter-spacing: 2px;
+    font-weight: 700;
+  }
+  header p {
+    margin: 4px 0 0;
+    font-size: 13px;
+    opacity: 0.85;
+  }
+  /* 設定バー */
+  .settings {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 8px 12px 14px;
+    font-size: 15px;
+  }
+  .settings label { opacity: 0.9; }
+  .settings input {
+    width: 72px;
+    padding: 8px 6px;
+    font-size: 18px;
+    text-align: center;
+    border: none;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.95);
+    color: #7a1420;
+    font-weight: 700;
+  }
+  /* タップ領域 */
+  .stage {
+    flex: 1;
+    margin: 0 16px 16px;
+    border-radius: 24px;
+    background: rgba(255,255,255,0.10);
+    border: 2px dashed rgba(255,255,255,0.4);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.08s ease, background 0.15s ease;
+    position: relative;
+  }
+  .stage:active { transform: scale(0.98); background: rgba(255,255,255,0.16); }
+  .hint {
+    position: absolute;
+    top: 18px;
+    font-size: 14px;
+    opacity: 0.75;
+  }
+  .number {
+    font-size: 42vw;
+    line-height: 1;
+    font-weight: 800;
+    text-shadow: 0 6px 20px rgba(0,0,0,0.35);
+    transition: transform 0.18s cubic-bezier(.2,1.4,.4,1);
+  }
+  .number.pop { animation: pop 0.35s ease; }
+  @keyframes pop {
+    0% { transform: scale(0.3); opacity: 0; }
+    60% { transform: scale(1.15); opacity: 1; }
+    100% { transform: scale(1); }
+  }
+  .label {
+    font-size: 18px;
+    margin-top: 4px;
+    opacity: 0.9;
+    letter-spacing: 2px;
+  }
+  .placeholder {
+    font-size: 22px;
+    opacity: 0.85;
+    line-height: 1.6;
+    text-align: center;
+  }
+  footer {
+    text-align: center;
+    padding: 0 16px 18px;
+  }
+  .reset {
+    background: rgba(255,255,255,0.9);
+    color: #7a1420;
+    border: none;
+    border-radius: 12px;
+    padding: 10px 20px;
+    font-size: 15px;
+    font-weight: 700;
+  }
+  .reset:active { opacity: 0.7; }
+</style>
+</head>
+<body>
+  <header>
+    <h1>🍶 席決めルーレット</h1>
+    <p>画面をタップすると席番号が出ます</p>
+  </header>
+
+  <div class="settings">
+    <label>席数</label>
+    <input type="number" id="maxNum" value="10" min="1" max="999" inputmode="numeric">
+    <span>まで</span>
+  </div>
+
+  <div class="stage" id="stage">
+    <span class="hint">ここをタップ 👆</span>
+    <div class="placeholder" id="placeholder">タップして<br>席を決めよう！</div>
+    <div class="number" id="number" style="display:none;"></div>
+    <div class="label" id="label" style="display:none;">番の席</div>
+  </div>
+
+  <footer>
+    <button class="reset" id="reset">もう一度はじめから</button>
+  </footer>
+
+<script>
+  const stage = document.getElementById('stage');
+  const numberEl = document.getElementById('number');
+  const labelEl = document.getElementById('label');
+  const placeholder = document.getElementById('placeholder');
+  const maxInput = document.getElementById('maxNum');
+  const resetBtn = document.getElementById('reset');
+
+  function pick() {
+    let max = parseInt(maxInput.value, 10);
+    if (isNaN(max) || max < 1) { max = 1; maxInput.value = 1; }
+    const n = Math.floor(Math.random() * max) + 1;
+
+    placeholder.style.display = 'none';
+    numberEl.style.display = 'block';
+    labelEl.style.display = 'block';
+    numberEl.textContent = n;
+
+    numberEl.classList.remove('pop');
+    void numberEl.offsetWidth; // reflow でアニメ再生
+    numberEl.classList.add('pop');
+
+    if (navigator.vibrate) navigator.vibrate(40);
+  }
+
+  stage.addEventListener('click', pick);
+
+  resetBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    numberEl.style.display = 'none';
+    labelEl.style.display = 'none';
+    placeholder.style.display = 'block';
+  });
+
+  // 入力欄タップで抽選が走らないように
+  maxInput.addEventListener('click', e => e.stopPropagation());
+</script>
+</body>
+</html>
