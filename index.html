@@ -2,93 +2,71 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#ffffff">
-  <title>数字くじ</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#b7192d">
+  <title>席決めルーレット</title>
   <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      background: #f7f7f7;
-      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
-      color: #222;
-    }
-    main {
-      width: min(92vw, 420px);
-      background: #fff;
-      border-radius: 24px;
-      padding: 28px 22px 34px;
-      text-align: center;
-      box-shadow: 0 10px 30px rgba(0,0,0,.08);
-    }
-    h1 { margin: 0 0 18px; font-size: 32px; }
-    label { display: block; margin-bottom: 8px; font-size: 17px; }
-    input {
-      width: 140px;
-      font-size: 28px;
-      text-align: center;
-      padding: 10px;
-      border: 2px solid #bbb;
-      border-radius: 12px;
-    }
-    #result {
-      min-height: 128px;
-      display: grid;
-      place-items: center;
-      margin: 24px 0;
-      font-size: 96px;
-      font-weight: 800;
-      line-height: 1;
-    }
-    button {
-      width: 100%;
-      min-height: 78px;
-      border: 0;
-      border-radius: 18px;
-      background: #1f7a4d;
-      color: #fff;
-      font-size: 34px;
-      font-weight: 700;
-      cursor: pointer;
-      touch-action: manipulation;
-    }
-    button:active { transform: scale(.98); }
-    p { margin: 14px 0 0; color: #666; font-size: 14px; }
+    :root{--red:#b7192d;--deep:#9f2d3c;--white:#fff7f7;--line:#e8919e}
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{margin:0;min-height:100%;background:var(--red);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;color:var(--white)}
+    body{min-height:100svh;overflow:hidden}
+    .app{min-height:100svh;padding:max(24px,env(safe-area-inset-top)) 18px max(18px,env(safe-area-inset-bottom));display:flex;flex-direction:column}
+    header{text-align:center;flex:none}
+    h1{margin:4px 0 3px;font-size:clamp(25px,7vw,34px);letter-spacing:.03em}
+    .sub{margin:0 0 18px;font-size:clamp(15px,4.5vw,20px);opacity:.9}
+    .setting{display:flex;justify-content:center;align-items:center;gap:12px;font-size:clamp(18px,5vw,24px);margin-bottom:20px}
+    input{width:132px;border:0;border-radius:18px;background:#fff8f8;color:#7f1321;text-align:center;font-size:34px;font-weight:800;padding:12px 10px;outline:none;box-shadow:0 2px 0 rgba(0,0,0,.08)}
+    .tap-area{flex:1;min-height:420px;border:4px dashed var(--line);border-radius:34px;background:linear-gradient(180deg,#b73548 0%,var(--deep) 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;cursor:pointer;touch-action:manipulation;user-select:none}
+    .hint{position:absolute;top:30px;font-size:clamp(17px,5vw,23px);opacity:.9}
+    #result{font-size:min(45vw,230px);font-weight:900;line-height:1;text-shadow:0 4px 12px rgba(0,0,0,.18);min-height:1em;display:flex;align-items:center;justify-content:center}
+    #message{font-size:clamp(26px,7vw,38px);line-height:1.65;text-align:center}
+    .tap-area:active{transform:scale(.995)}
+    .tap-area.has-result #message{display:none}
+    .tap-area:not(.has-result) #result{display:none}
   </style>
 </head>
 <body>
-  <main>
-    <h1>数字くじ</h1>
-    <label for="max">何番まで？</label>
-    <input id="max" type="number" min="1" step="1" value="10" inputmode="numeric">
-    <div id="result" aria-live="polite">—</div>
-    <button id="draw" type="button">タップ</button>
-    <p>1から設定した数字までの中から、1つ表示します。</p>
+  <main class="app">
+    <header>
+      <h1>🍶 席決めルーレット</h1>
+      <p class="sub">画面をタップすると席番号が出ます</p>
+      <div class="setting">
+        <span>席数</span>
+        <input id="max" type="number" min="1" max="999" step="1" value="10" inputmode="numeric" aria-label="席数">
+        <span>まで</span>
+      </div>
+    </header>
+
+    <section id="tapArea" class="tap-area" role="button" tabindex="0" aria-label="タップして席番号を決める">
+      <div class="hint">ここをタップ 👆</div>
+      <div id="result" aria-live="polite"></div>
+      <div id="message">タップして<br>席を決めよう！</div>
+    </section>
   </main>
 
   <script>
-    const maxInput = document.getElementById('max');
-    const result = document.getElementById('result');
-    const drawButton = document.getElementById('draw');
+    const maxInput=document.getElementById('max');
+    const tapArea=document.getElementById('tapArea');
+    const result=document.getElementById('result');
 
-    function drawNumber() {
-      const max = Number.parseInt(maxInput.value, 10);
-      if (!Number.isInteger(max) || max < 1) {
-        result.textContent = '?';
+    function draw(){
+      const max=Math.floor(Number(maxInput.value));
+      if(!Number.isFinite(max)||max<1){
+        maxInput.value=1;
         maxInput.focus();
         return;
       }
-      result.textContent = String(Math.floor(Math.random() * max) + 1);
+      result.textContent=String(Math.floor(Math.random()*max)+1);
+      tapArea.classList.add('has-result');
+      if(navigator.vibrate) navigator.vibrate(35);
     }
 
-    drawButton.addEventListener('click', drawNumber);
-    drawButton.addEventListener('touchend', (event) => {
-      event.preventDefault();
-      drawNumber();
-    }, { passive: false });
+    tapArea.addEventListener('click',draw);
+    tapArea.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();draw();}});
+    maxInput.addEventListener('click',e=>e.stopPropagation());
+    maxInput.addEventListener('input',()=>tapArea.classList.remove('has-result'));
   </script>
 </body>
 </html>
