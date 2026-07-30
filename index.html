@@ -6,35 +6,42 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#b7192d">
-  <title>席決めルーレット</title>
+  <title>席決めルーレット 第2版</title>
   <style>
-    :root{--red:#b7192d;--deep:#9f2d3c;--white:#fff7f7;--line:#e8919e}
+    :root{--red:#b7192d;--deep:#8f2133;--light:#fff4f5;--line:#ef9eaa}
     *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-    html,body{margin:0;min-height:100%;background:var(--red);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;color:var(--white)}
+    html,body{margin:0;min-height:100%;background:var(--red);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;color:#fff}
     body{min-height:100svh;overflow:hidden}
-    .app{min-height:100svh;padding:max(24px,env(safe-area-inset-top)) 18px max(18px,env(safe-area-inset-bottom));display:flex;flex-direction:column}
+    .app{min-height:100svh;padding:max(14px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:10px}
     header{text-align:center;flex:none}
-    h1{margin:4px 0 3px;font-size:clamp(25px,7vw,34px);letter-spacing:.03em}
-    .sub{margin:0 0 18px;font-size:clamp(15px,4.5vw,20px);opacity:.9}
-    .setting{display:flex;justify-content:center;align-items:center;gap:12px;font-size:clamp(18px,5vw,24px);margin-bottom:20px}
-    input{width:132px;border:0;border-radius:18px;background:#fff8f8;color:#7f1321;text-align:center;font-size:34px;font-weight:800;padding:12px 10px;outline:none;box-shadow:0 2px 0 rgba(0,0,0,.08)}
-    .tap-area{flex:1;min-height:420px;border:4px dashed var(--line);border-radius:34px;background:linear-gradient(180deg,#b73548 0%,var(--deep) 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;cursor:pointer;touch-action:manipulation;user-select:none}
-    .hint{position:absolute;top:30px;font-size:clamp(17px,5vw,23px);opacity:.9}
-    #result{font-size:min(45vw,230px);font-weight:900;line-height:1;text-shadow:0 4px 12px rgba(0,0,0,.18);min-height:1em;display:flex;align-items:center;justify-content:center}
-    #message{font-size:clamp(26px,7vw,38px);line-height:1.65;text-align:center}
-    .tap-area:active{transform:scale(.995)}
+    h1{margin:0 0 4px;font-size:clamp(23px,6vw,34px)}
+    .setting{display:flex;justify-content:center;align-items:center;gap:10px;font-size:clamp(18px,4.8vw,23px)}
+    input{width:120px;border:0;border-radius:16px;background:#fff;color:#821827;text-align:center;font-size:32px;font-weight:900;padding:8px;outline:none}
+    .tap-area{flex:1;min-height:0;border:4px dashed var(--line);border-radius:30px;background:linear-gradient(180deg,#b9384d 0%,var(--deep) 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;cursor:pointer;touch-action:manipulation;user-select:none;padding:16px}
+    .hint{position:absolute;top:18px;font-size:clamp(16px,4.5vw,22px);opacity:.9}
+    #result{font-size:clamp(150px,58vw,430px);font-weight:900;line-height:.82;text-align:center;letter-spacing:-.06em;text-shadow:0 6px 16px rgba(0,0,0,.2)}
+    #message{font-size:clamp(29px,8vw,48px);line-height:1.5;text-align:center;font-weight:800}
     .tap-area.has-result #message{display:none}
     .tap-area:not(.has-result) #result{display:none}
+    .tap-area.finished #result{display:none}
+    .tap-area.finished #message{display:block}
+    .tap-area:active{transform:scale(.997)}
+    .bottom{flex:none;background:rgba(255,255,255,.12);border-radius:18px;padding:10px 12px}
+    .status-row{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px}
+    #remaining{font-size:clamp(20px,5.4vw,28px);font-weight:900}
+    #history{font-size:clamp(13px,3.5vw,17px);line-height:1.45;max-height:48px;overflow:auto;word-break:break-all}
+    button{width:100%;min-height:56px;border:0;border-radius:16px;background:#fff;color:#8b1e2e;font-size:clamp(22px,5.5vw,28px);font-weight:900;cursor:pointer;touch-action:manipulation;margin-top:10px}
+    button:active{transform:scale(.99)}
+    @media (min-width:700px){.app{max-width:780px;margin:auto}.tap-area{min-height:520px}#result{font-size:360px}}
   </style>
 </head>
 <body>
   <main class="app">
     <header>
       <h1>🍶 席決めルーレット</h1>
-      <p class="sub">画面をタップすると席番号が出ます</p>
       <div class="setting">
         <span>席数</span>
-        <input id="max" type="number" min="1" max="999" step="1" value="10" inputmode="numeric" aria-label="席数">
+        <input id="max" type="number" min="1" max="999" value="10" inputmode="numeric" aria-label="席数">
         <span>まで</span>
       </div>
     </header>
@@ -44,29 +51,108 @@
       <div id="result" aria-live="polite"></div>
       <div id="message">タップして<br>席を決めよう！</div>
     </section>
+
+    <section class="bottom">
+      <div class="status-row">
+        <div id="remaining">残り10人</div>
+      </div>
+      <div id="history">出た番号：まだありません</div>
+      <button id="reset" type="button">リセット</button>
+    </section>
   </main>
 
   <script>
     const maxInput=document.getElementById('max');
     const tapArea=document.getElementById('tapArea');
     const result=document.getElementById('result');
+    const message=document.getElementById('message');
+    const remaining=document.getElementById('remaining');
+    const historyEl=document.getElementById('history');
+    const resetBtn=document.getElementById('reset');
+
+    let pool=[];
+    let history=[];
+    let finished=false;
+    let audioContext=null;
+
+    function validMax(){
+      const n=Math.floor(Number(maxInput.value));
+      return Number.isFinite(n)&&n>=1?Math.min(n,999):1;
+    }
+
+    function shuffle(array){
+      for(let i=array.length-1;i>0;i--){
+        const j=Math.floor(Math.random()*(i+1));
+        [array[i],array[j]]=[array[j],array[i]];
+      }
+      return array;
+    }
+
+    function updateDisplay(){
+      remaining.textContent=`残り${pool.length}人`;
+      historyEl.textContent=history.length?`出た番号：${history.join('・')}`:'出た番号：まだありません';
+    }
+
+    function resetGame(){
+      const max=validMax();
+      maxInput.value=max;
+      pool=shuffle(Array.from({length:max},(_,i)=>i+1));
+      history=[];
+      finished=false;
+      result.textContent='';
+      message.innerHTML='タップして<br>席を決めよう！';
+      tapArea.classList.remove('has-result','finished');
+      updateDisplay();
+    }
+
+    function playSound(){
+      try{
+        audioContext=audioContext||new (window.AudioContext||window.webkitAudioContext)();
+        const osc=audioContext.createOscillator();
+        const gain=audioContext.createGain();
+        osc.frequency.value=740;
+        gain.gain.setValueAtTime(.08,audioContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(.001,audioContext.currentTime+.14);
+        osc.connect(gain);gain.connect(audioContext.destination);
+        osc.start();osc.stop(audioContext.currentTime+.14);
+      }catch(e){}
+    }
 
     function draw(){
-      const max=Math.floor(Number(maxInput.value));
-      if(!Number.isFinite(max)||max<1){
-        maxInput.value=1;
-        maxInput.focus();
+      if(finished) return;
+      if(pool.length===0){
+        finished=true;
+        tapArea.classList.remove('has-result');
+        tapArea.classList.add('finished');
+        message.innerHTML='🎉<br>席決め終了！<br>🎉';
         return;
       }
-      result.textContent=String(Math.floor(Math.random()*max)+1);
+
+      const n=pool.pop();
+      history.push(n);
+      result.textContent=String(n);
       tapArea.classList.add('has-result');
+      updateDisplay();
+      playSound();
       if(navigator.vibrate) navigator.vibrate(35);
+
+      if(pool.length===0){
+        setTimeout(()=>{
+          finished=true;
+          tapArea.classList.remove('has-result');
+          tapArea.classList.add('finished');
+          message.innerHTML='🎉<br>席決め終了！<br>🎉';
+        },900);
+      }
     }
 
     tapArea.addEventListener('click',draw);
     tapArea.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();draw();}});
+    resetBtn.addEventListener('click',e=>{e.stopPropagation();resetGame();});
     maxInput.addEventListener('click',e=>e.stopPropagation());
-    maxInput.addEventListener('input',()=>tapArea.classList.remove('has-result'));
+    maxInput.addEventListener('input',resetGame);
+
+    resetGame();
   </script>
 </body>
 </html>
